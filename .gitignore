@@ -1,32 +1,38 @@
+#ignores some terraform state files and some secrets from commiting
 .terraform/
 *.tfstate 
 *.tfstate.*
 .terraform.tfstate.lock.info
 
+#ignores logs from terraform crashes
 crash.log
 crash.*.log
 
-
+#ignore some local overrides
 override.tf 
 override.tf.json 
 *_override.tf
 *_override.tf.json
 
+#ignore var values
 *.tfvars
 *.tfars.json
 
+#ignore config details
 .terraformrc
 terraform.rc
 
+#ignore zips that may be created 
 infra/lambda/*/*.zip
 infra/build/
 
-
+#python and env files
 __pycache__/
 *.pyc
 .venv/
 .env
 
+#just the usual IDE ignores
 .DS_Store
 .vscode/
 .idea/
