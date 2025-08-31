@@ -16,7 +16,7 @@ override.tf.json
 
 #ignore var values
 *.tfvars
-*.tfars.json
+*.tfvars.json
 
 #ignore config details
 .terraformrc
@@ -25,6 +25,10 @@ terraform.rc
 #ignore zips that may be created 
 infra/lambda/*/*.zip
 infra/build/
+
+#ignore tf plans
+*.tfplan
+*.plan
 
 #python and env files
 __pycache__/
