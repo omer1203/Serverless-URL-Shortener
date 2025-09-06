@@ -6,6 +6,7 @@ import time
 import random
 import string
 from botocore.exceptions import ClientError
+import base64
 
 
 TABLE_NAME = os.environ.get("TABLE_NAME", "")
@@ -57,13 +58,25 @@ def read_long_url(event): #read the long url on events
         return str(event["long_url"])
     
     #if call from an api gateway and it is a json string
-    if isinstance(event, dict) and isinstance(event.get("body"), str): 
-        try:
-            body = json.loads(event["body"]) #turn the json string into a dict
-            return str(body["long_url", ""]) # return the url or "" if missing
-        except Exception:
-            # print(e)
-            return "" #if bad json, treat as empty
+    if isinstance(event, dict): 
+        body = event.get("body") #get the body
+        
+        if isinstance(body, str):
+            if event.get("isBase64Encoded"):
+                try:
+                    body = base64.b64decode(body).decode("utf-8", "ignore") #decode the base64 body
+                except Exception: 
+                    body = "" #if decoding fails, treat as empty string
+            if body:
+                try:
+                    data = json.loads(body) #turn the json string into a dict
+                    return str(data.get("long_url", "")) # return the url or "" if missing
+                except Exception:
+                    # print(e)
+                    pass #if bad json, treat as empty
+        qs = event.get("queryStringParameters") or event.get("query_string_parameters") or {}
+        if isinstance(qs, dict) and "long_url" in qs:
+            return str(qs["long_url"])
         
     return "" #if all else fails, return empty string
     

@@ -222,4 +222,104 @@ resource "aws_lambda_function" "redirect" {
 }
 
 
+#now that redirect and shortener is set, get started with the HTTP APi
+
+#API gateway HTTP API 
+#the HTTP API  will front the lambda functions. 
+#Enable permissions CORS so browsers can call without errors
+resource "aws_apigatewayv2_api" "http_api" {
+  name          = "urlshortner-http-api" #the name in aws
+  protocol_type = "HTTP"                 #http api since it is easier and cheaper than rest
+
+  #now add the basic CORS config so can be called by any front end 
+  cors_configuration {
+    allow_credentials = false                      #not using cookies or auth
+    allow_headers     = ["content-type"]           #allow content type headers by users for json
+    allow_methods     = ["GET", "POST", "OPTIONS"] #methods that the api will accept
+    allow_origins     = ["*"]                      #any origin
+    max_age           = 600                        #cache for 10 min
+  }
+
+  tags = {
+    Project = "serverless-url-shortener"
+    Env     = "dev"
+  }
+
+}
+
+#now create the integration between the HTTP API and the lambda functions
+#with aws proxy and payload format, API gatewya will forward the raw http request as an event to lambda which will be handled in the redirect file 
+resource "aws_apigatewayv2_integration" "shorten_integration" {
+  api_id                 = aws_apigatewayv2_api.http_api.id         #attach to our http api above
+  integration_type       = "AWS_PROXY"                              #the integration type, this is the only type that can be used with lambda
+  integration_uri        = aws_lambda_function.shortener.invoke_arn #arn to invoke the shortener lambda
+  payload_format_version = "2.0"                                    #events uses http api 2.0
+  timeout_milliseconds   = 5000                                     #stops after 5s
+
+}
+
+resource "aws_apigatewayv2_integration" "redirect_integration" {
+  api_id                 = aws_apigatewayv2_api.http_api.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.redirect.invoke_arn
+  payload_format_version = "2.0"
+  timeout_milliseconds   = 5000
+
+}
+
+
+#now add the routes- map http method+path to the integration\
+resource "aws_apigatewayv2_route" "shorten_route" {
+  api_id    = aws_apigatewayv2_api.http_api.id
+  route_key = "POST /shorten"                                                       #the method + the path
+  target    = "integrations/${aws_apigatewayv2_integration.shorten_integration.id}" #the shortenber integration to use}"
+
+}
+
+resource "aws_apigatewayv2_route" "redirect_route" {
+  api_id    = aws_apigatewayv2_api.http_api.id
+  route_key = "GET /r/{code}"
+  target    = "integrations/${aws_apigatewayv2_integration.redirect_integration.id}" #use the redirect integration id
+}
+
+
+
+#now add the deployment to the stage
+#catch all stage with auto deploy
+resource "aws_apigatewayv2_stage" "default_stage" {
+  api_id      = aws_apigatewayv2_api.http_api.id
+  name        = "$default" #special name default stage
+  auto_deploy = true       #deploy automatically
+
+  tags = {
+    Project = "serverless-url-shortener"
+    Env     = "dev"
+  }
+
+
+}
+
+
+
+#now allow api gateway to invoke each lambda function--- permissions below
+resource "aws_lambda_permission" "allow_api_invoke_shortener" {
+  statement_id  = "AllowAPIGatewayInvokeShortener"                     #the statement name/id
+  action        = "lambda:InvokeFunction"                              #allow invoking the function
+  function_name = aws_lambda_function.shortener.function_name          #which function will be invoked
+  principal     = "apigateway.amazonaws.com"                           #who is allowed to invoke the function
+  source_arn    = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*" #all paths and methods
+}
+#now do the same for the redirect function
+resource "aws_lambda_permission" "allow_api_invoke_redirect" {
+  statement_id  = "AllowAPIGatewayInvokeRedirect"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.redirect.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
+
+}
+
+
+
+
 
