@@ -300,7 +300,6 @@ resource "aws_apigatewayv2_stage" "default_stage" {
 }
 
 
-
 #now allow api gateway to invoke each lambda function--- permissions below
 resource "aws_lambda_permission" "allow_api_invoke_shortener" {
   statement_id  = "AllowAPIGatewayInvokeShortener"                     #the statement name/id
@@ -316,7 +315,6 @@ resource "aws_lambda_permission" "allow_api_invoke_redirect" {
   function_name = aws_lambda_function.redirect.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
-
 }
 
 
