@@ -316,7 +316,6 @@ resource "aws_lambda_permission" "allow_api_invoke_redirect" {
   function_name = aws_lambda_function.redirect.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
-
 }
 
 
