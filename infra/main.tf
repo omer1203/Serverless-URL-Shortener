@@ -300,7 +300,6 @@ resource "aws_apigatewayv2_stage" "default_stage" {
 }
 
 
-
 #now allow api gateway to invoke each lambda function--- permissions below
 resource "aws_lambda_permission" "allow_api_invoke_shortener" {
   statement_id  = "AllowAPIGatewayInvokeShortener"                     #the statement name/id
