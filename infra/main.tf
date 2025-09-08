@@ -34,7 +34,7 @@ resource "aws_iam_role" "shortener_role" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
-      Effect = "allow",
+      Effect = "Allow",
       Principal = {
         Service = "lambda.amazonaws.com" #lambda service can assuem this role
       },
