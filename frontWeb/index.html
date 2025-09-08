@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en"> <!-- keep lang as english -->
+    <head>
+        <meta charset="utf-8" /> <!-- use utf so all chars are normal -->
+        <meta name = "viewport" content="width=device-width, initial-scale=1" />
+        <title>Serverless URL Shortener</title>
+    </head>
+
+    <body>
+        <h1>Serverless URL Shortener</h1> <!--heading-->
+        <!--create a form to enter long url and submit-->
+        <form id="shortenForm">
+            <label for="longURL">Long URL</label> <!--accessible label for the long url input-->
+            <br /> <!--line for input-->
+
+            <input 
+            id="longURL"
+            type="url" 
+            placeholder="https://something.com"
+            required
+            />
+            <br />
+            <button type="submit" id="submitBtn">Generate Short URL</button>
+            <!--enter key button submit will be intercepted and handled in js-->
+
+        </form>
+
+        <p id="status" aria-live="polite"></p>
+
+        <p id="result" hidden>
+            Short Link: 
+            <a id="shortLink" href="#" target="_blank" rel="noopener"></a>
+        </p>
+        
+        <script src="./app.js"></script>
+    </body>
+</html>
