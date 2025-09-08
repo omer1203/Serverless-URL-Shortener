@@ -24,7 +24,10 @@ resource "aws_iam_role" "github_actions" {
                     "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
                 },
                 StringLike = { 
-                    "token.actions.githubusercontent.com:sub" = "repo:omer1203/Serverless-URL-Shortener:ref:refs/heads/main"
+                    "token.actions.githubusercontent.com:sub" = [
+                        "repo:omer1203/Serverless-URL-Shortener:pull_request",
+                        "repo:omer1203/Serverless-URL-Shortener:ref:refs/heads/main"
+                    ]
                 }
             }
         }]
