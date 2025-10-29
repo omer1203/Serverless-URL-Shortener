@@ -1,5 +1,10 @@
 # Serverless URL Shortener
 
+<p align="center">
+  <img src="urlSS.png" alt="Serverless URL Shortener UI" width="900">
+  
+</p>
+
 A production-ready, serverless URL shortener built on AWS with Infrastructure as Code. This project demonstrates modern cloud architecture, event-driven design, and automated CI/CD practices.
 
 ## Overview
