@@ -173,4 +173,5 @@ Includes request tracking, error logging, and performance metrics.
 - Automatic scaling to handle traffic spikes
 - Pay-per-use pricing model
 - No infrastructure management overhead
-
+ 
+Note: replace placeholders like `YOUR_ACCOUNT_ID` and `YOUR_API_GATEWAY_URL` before production deployment.

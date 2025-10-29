@@ -25,7 +25,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4 #this will pull the repo inside the runner
 
-      - name: Configure AWS Credentials via OIDC
+      - name: Configure AWS Credentials via OIDC # YOUR_ACCOUNT_ID placeholder below
         uses: aws-actions/configure-aws-credentials@v4 
         with: 
           role-to-assume: arn:aws:iam::YOUR_ACCOUNT_ID:role/github-actions-terraform

@@ -1,6 +1,6 @@
 "use strict";
 
-// Replace with your actual API Gateway URL after deployment
+// Replace with your actual API Gateway URL after deployment (placeholder kept intentionally)
 const API_main = "https://YOUR_API_GATEWAY_URL.execute-api.us-east-1.amazonaws.com"
 
 // DOM elements

@@ -256,7 +256,7 @@ resource "aws_apigatewayv2_api" "http_api" {
 
 }
 
-#now create the integration between the HTTP API and the lambda functions
+#now create the integration between the HTTP API and the lambda functions (no usage plans for HTTP API)
 #with aws proxy and payload format, API gatewya will forward the raw http request as an event to lambda which will be handled in the redirect file 
 resource "aws_apigatewayv2_integration" "shorten_integration" {
   api_id                 = aws_apigatewayv2_api.http_api.id         #attach to our http api above
