@@ -28,14 +28,16 @@ jobs:
       - name: Configure AWS Credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4 
         with: 
-          role-to-assume: arn:aws:iam::163666916898:role/github-actions-terraform
+          role-to-assume: arn:aws:iam::YOUR_ACCOUNT_ID:role/github-actions-terraform
           aws-region: us-east-1
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3 #installs terraform on the runner
 
       - name: Terraform Init
-        run: terraform init #initializes providers and backend
+        # Using local backend (backend commented out in version.tf)
+        # For production: uncomment backend in version.tf and use GitHub Secrets for backend.tfvars
+        run: terraform init
 
       - name: Terraform fmt
         run: terraform fmt -check -recursive #ensure check and recursive, fails if code is not formatted

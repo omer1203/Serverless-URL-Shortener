@@ -12,8 +12,17 @@ resource "aws_dynamodb_table" "url" {
     type = "S" #S means string
   }
 
+  # Security enhancements
+  server_side_encryption {
+    enabled = true
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
   tags = {
-    Project = "serverless-url-shortner"
+    Project = "serverless-url-shortener"
     Env     = "dev"
   }
 
@@ -66,7 +75,7 @@ resource "aws_iam_role_policy" "shortener_basic" {
 
 #now def the lambda function recourse
 resource "aws_lambda_function" "shortener" {
-  function_name = "urlshortner-shortener"
+  function_name = "urlshortener-shortener"
   role          = aws_iam_role.shortener_role.arn #attaching the role to the lambda func
 
   #runtime and handler tells lambda how to run code handler.py to lambda_handler
@@ -91,7 +100,7 @@ resource "aws_lambda_function" "shortener" {
   }
 
   tags = {
-    Project = "serverless-url-shortner"
+    Project = "serverless-url-shortener"
     Env     = "dev"
 
   }
@@ -132,7 +141,7 @@ data "archive_file" "redirect_zip" {
 
 #iam roles for redirect
 resource "aws_iam_role" "redirect_role" {
-  name = "urlshortner-redirect-role" #the visible iam role name
+  name = "urlshortener-redirect-role" #the visible iam role name
   #allow lambda to assume this role
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -193,7 +202,7 @@ resource "aws_iam_role_policy" "redirect_dynamodb" {
 
 #now create the redirect lambda function
 resource "aws_lambda_function" "redirect" {
-  function_name = "urlshortner-redirect"         #the function name in aws
+  function_name = "urlshortener-redirect"        #the function name in aws
   role          = aws_iam_role.redirect_role.arn #execution role
 
   runtime = "python3.11"             #same runtime as the shortener lambda function
@@ -214,7 +223,7 @@ resource "aws_lambda_function" "redirect" {
   }
 
   tags = {
-    Project = "serverless-url-shortner"
+    Project = "serverless-url-shortener"
     Env     = "dev"
   }
 
@@ -228,15 +237,15 @@ resource "aws_lambda_function" "redirect" {
 #the HTTP API  will front the lambda functions. 
 #Enable permissions CORS so browsers can call without errors
 resource "aws_apigatewayv2_api" "http_api" {
-  name          = "urlshortner-http-api" #the name in aws
-  protocol_type = "HTTP"                 #http api since it is easier and cheaper than rest
+  name          = "urlshortener-http-api" #the name in aws
+  protocol_type = "HTTP"                  #http api since it is easier and cheaper than rest
 
   #now add the basic CORS config so can be called by any front end 
   cors_configuration {
     allow_credentials = false                      #not using cookies or auth
     allow_headers     = ["content-type"]           #allow content type headers by users for json
     allow_methods     = ["GET", "POST", "OPTIONS"] #methods that the api will accept
-    allow_origins     = ["*"]                      #any origin
+    allow_origins     = ["*"]                      #any origin - TODO: restrict in production
     max_age           = 600                        #cache for 10 min
   }
 

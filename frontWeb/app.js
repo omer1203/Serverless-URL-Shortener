@@ -1,90 +1,210 @@
 "use strict";
 
-const API_main = "" //add the http api here
+// Replace with your actual API Gateway URL after deployment
+const API_main = "https://YOUR_API_GATEWAY_URL.execute-api.us-east-1.amazonaws.com"
 
+// DOM elements
 const form = document.getElementById("shortenForm");
 const longURLInput = document.getElementById("longURL");
 const submitBtn = document.getElementById("submitBtn");
-const status1 = document.getElementById("status");
+const btnText = submitBtn.querySelector(".btn-text");
+const status = document.getElementById("status");
 const result = document.getElementById("result");
 const shortLink = document.getElementById("shortLink");
+const destinationUrl = document.getElementById("destinationUrl");
+const copyBtn = document.getElementById("copyBtn");
 
-function setStatus(message, isError = false) {
+// API endpoints
+const shortenEndPoint = `${API_main}/shorten`;
+const redirectBase = `${API_main}/r/`;
 
-    status1.textContent = message || ""; // update the status para with a message or empty
-    if(isError && message) status1.textContent = `Error: ${message}`;
-
+// Utility functions
+function setStatus(message, type = "info") {
+    status.textContent = message || "";
+    status.className = `status ${type}`;
+    if (!message) {
+        status.className = "status";
+    }
 }
 
-const shortenEndPoint = `${API_main}/shorten`; // post here
-const redirectBase = `${API_main}/r/` // users will visit this + short code
+function showLoading() {
+    submitBtn.disabled = true;
+    btnText.innerHTML = '<div class="loading"></div> Shortening...';
+}
 
+function hideLoading() {
+    submitBtn.disabled = false;
+    btnText.innerHTML = '<i class="fas fa-compress-alt"></i> Shorten URL';
+}
 
-function showResult(shortCode, longURL) { 
-
-    //now build a full short url based on http api pattern
+function showResult(shortCode, longURL) {
     const shortURL = `${redirectBase}${encodeURIComponent(shortCode)}`;
-
-    shortLink.href = shortURL// fill hte href and text so its clickable
-    shortLink.textContent = shortCode; // show only the code as the link text
-
-    setStatus(`Destination: ${longURL}`); // show the long url too 
-    result.hidden = false; // reveal the result para which was hidden at first in html 
-
+    
+    // Show only the code for display, but keep full URL for the href
+    shortLink.href = shortURL;
+    shortLink.textContent = shortCode;
+    destinationUrl.textContent = longURL;
+    
+    result.classList.add("show");
+    setStatus("URL shortened successfully!", "success");
+    
+    // Scroll to result
+    result.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
-
-//function for basic http link verification
-function httpURL(value) { 
-    return /^https?:\/\//i.test(value) && value.includes("."); // check if the value starts with http:// or https://
+function hideResult() {
+    result.classList.remove("show");
 }
 
+// URL validation
+function isValidURL(value) {
+    try {
+        const url = new URL(value);
+        return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+        return false;
+    }
+}
 
+// Copy to clipboard functionality
+async function copyToClipboard(text) {
+    try {
+        await navigator.clipboard.writeText(text);
+        copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+        copyBtn.classList.add("copied");
+        
+        setTimeout(() => {
+            copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+            copyBtn.classList.remove("copied");
+        }, 2000);
+        
+        setStatus("Link copied to clipboard!", "success");
+    } catch (err) {
+        // Fallback for older browsers
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+        
+        copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+        copyBtn.classList.add("copied");
+        
+        setTimeout(() => {
+            copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+            copyBtn.classList.remove("copied");
+        }, 2000);
+        
+        setStatus("Link copied to clipboard!", "success");
+    }
+}
+
+// Event listeners
 form.addEventListener("submit", async (event) => {
-    event.preventDefault(); // prevent the form from submitting normally
-    result.hidden = true;
+    event.preventDefault();
+    
+    const longURL = longURLInput.value.trim();
+    
+    // Clear previous results
+    hideResult();
     setStatus("");
-
-    const longURL = longURLInput.value.trim(); // get the value of the input field and trim any whitespace
-
-    if(!httpURL(longURL)) {
-        setStatus("Invalid URL. Please enter a valid http or https URL.", true);
+    
+    // Validate URL
+    if (!longURL) {
+        setStatus("Please enter a URL", "error");
+        longURLInput.focus();
         return;
     }
-
-    submitBtn.disabled = true;
-    setStatus("Shortening URL..."); // set the status to "shortening url"
-
+    
+    if (!isValidURL(longURL)) {
+        setStatus("Please enter a valid URL (must start with http:// or https://)", "error");
+        longURLInput.focus();
+        return;
+    }
+    
+    // Show loading state
+    showLoading();
+    setStatus("Shortening your URL...", "info");
+    
     try {
-        //send POST /shorten tothe api with json body {long_url: "wtv"}
-        const response = await fetch(`${API_main}/shorten`, {
-            method: "POST", // the backend expects a post 
+        const response = await fetch(shortenEndPoint, {
+            method: "POST",
             headers: {
-                "Content-Type": "application/json" //obv, tell server its json
+                "Content-Type": "application/json"
             },
-            body: JSON.stringify({ long_url: longURL }) //serialize the payload as json text using key that lambda expects
+            body: JSON.stringify({ long_url: longURL })
         });
-
-        const data = await response.json().catch(() => ({}));
-        if(!response.ok) { // if there is an error
-            const msg = data && data.error ? data.error : `HTTP ${response.status}`;
-            setStatus(msg, true); // Mark as error in the status area
-            return; //stop if error
-        }
-
-        if (!data || !data.short_code) {
-            setStatus("Invalid response from server", true);
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            const errorMessage = data?.error || `HTTP ${response.status}`;
+            setStatus(`Error: ${errorMessage}`, "error");
             return;
         }
-
         
+        if (!data?.short_code) {
+            setStatus("Invalid response from server", "error");
+            return;
+        }
+        
+        // Show success result
         showResult(data.short_code, longURL);
-        setStatus(`Destination: ${longURL}`); //the long url 
-    } 
-    catch (error) {
-        setStatus(`Error shortening URL: ${error.message}`, true);
+        
+    } catch (error) {
+        console.error("Error:", error);
+        setStatus(`Network error: ${error.message}`, "error");
+    } finally {
+        hideLoading();
     }
-    finally { 
-        submitBtn.disabled = false
+});
+
+// Copy button event listener
+copyBtn.addEventListener("click", () => {
+    // Get the full URL from the href attribute
+    const urlToCopy = shortLink.href;
+    copyToClipboard(urlToCopy);
+});
+
+// Input validation feedback
+longURLInput.addEventListener("input", () => {
+    const value = longURLInput.value.trim();
+    if (value && !isValidURL(value)) {
+        longURLInput.style.borderColor = "#e53e3e";
+    } else {
+        longURLInput.style.borderColor = "#e2e8f0";
     }
+});
+
+// Auto-focus on page load
+window.addEventListener("load", () => {
+    longURLInput.focus();
+});
+
+// Keyboard shortcuts
+document.addEventListener("keydown", (event) => {
+    // Ctrl/Cmd + Enter to submit
+    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        if (!submitBtn.disabled) {
+            form.dispatchEvent(new Event("submit"));
+        }
+    }
+    
+    // Escape to clear
+    if (event.key === "Escape") {
+        hideResult();
+        setStatus("");
+        longURLInput.focus();
+    }
+});
+
+// Add some nice animations on page load
+window.addEventListener("load", () => {
+    document.body.style.opacity = "0";
+    document.body.style.transition = "opacity 0.5s ease";
+    
+    setTimeout(() => {
+        document.body.style.opacity = "1";
+    }, 100);
 });

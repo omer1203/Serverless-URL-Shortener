@@ -24,20 +24,25 @@ def make_response(status_code, body_dict):
         "statusCode": status_code, #like 200 or 400
         "headers": { 
             "Content-Type": "application/json", #declare that it is json
-            'Access-Control-Allow-Origin': '*', #siumple CORS
+            'Access-Control-Allow-Origin': '*', #simple CORS
+            'X-Content-Type-Options': 'nosniff', #security header
+            'X-Frame-Options': 'DENY', #security header
+            'X-XSS-Protection': '1; mode=block', #security header
+            'Strict-Transport-Security': 'max-age=31536000; includeSubDomains', #security header
             # 'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
         },
         "body": json.dumps(body_dict) #Api gateway expects a string body
     }
 
 def is_valid_url(url): #function to check if the url is valid, not foolproof, just some precausions
-    if not isinstance(url, str)or len(url) > 3000:  #if the url is not a string and is very long
+    if not isinstance(url, str) or len(url) > 2000:  #if the url is not a string and is very long
         return False  #return false
     
     if not url.startswith(allowed): #if the url does not start with http 
         return False #return false
     
-    pattern = r"^https?://[A-Za-z0-9.-]+(?::\d+)?(?:/\S*)?$"
+    # More comprehensive URL validation
+    pattern = r"^https?://[A-Za-z0-9.-]+(?::\d+)?(?:/[^\s]*)?$"
     
     return re.match(pattern, url) is not None #if it matches the regex pattern, return true and continue
 

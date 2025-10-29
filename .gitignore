@@ -17,6 +17,7 @@ override.tf.json
 #ignore var values
 *.tfvars
 *.tfvars.json
+backend.tfvars
 
 #ignore config details
 .terraformrc

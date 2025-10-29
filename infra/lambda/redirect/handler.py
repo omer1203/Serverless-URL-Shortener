@@ -21,6 +21,10 @@ def json_response(status, data): #func to return json with cors
         "headers": {
             "Content-Type": "application/json", #its json
             "Access-Control-Allow-Origin": "*", #allow calls from any origin 
+            'X-Content-Type-Options': 'nosniff', #security header
+            'X-Frame-Options': 'DENY', #security header
+            'X-XSS-Protection': '1; mode=block', #security header
+            'Strict-Transport-Security': 'max-age=31536000; includeSubDomains', #security header
             # "Access-Control-Allow-Credentials": True
         },
         "body": json.dumps(data), #the api gateway string body
@@ -83,8 +87,12 @@ def lambda_handler(event, context):
     except ClientError as e:
         pass
     
-    return{  #return a 301 redirect which the api gateway turns into an http response with location header
-           "statusCode" : 301,  #301 means moved permanently
-           "headers": {"Location": long_url}, #the browser will follow this url
-            "body" : "" #body can be empty 
+    # For API Gateway HTTP API, return a 200 with redirect in body
+    return {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": "text/html",
+            "Location": long_url
+        },
+        "body": f'<html><head><meta http-equiv="refresh" content="0; url={long_url}"></head><body><p>Redirecting to <a href="{long_url}">{long_url}</a></p></body></html>'
     }   
