@@ -27,9 +27,20 @@ terraform.rc
 infra/lambda/*/*.zip
 infra/build/
 
+# generated output artifacts
+infra/out.json
+
 #ignore tf plans
 *.tfplan
 *.plan
+
+# local runtime/version files
+.python-version
+
+# optional screenshots/assets not for source control
+frontWeb/*.png
+frontWeb/*.jpg
+screenshots/
 
 #python and env files
 __pycache__/
